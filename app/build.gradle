@@ -1,0 +1,87 @@
+apply plugin: 'com.android.application'
+
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion '24.0.1'
+    defaultConfig {
+        applicationId "com.udacity.gradle.builditbigger"
+        minSdkVersion 15
+        targetSdkVersion 24
+        versionCode 1
+        versionName "1.0"
+        jackOptions {
+            enabled true
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    productFlavors {
+        paid {
+            minSdkVersion 15
+            applicationId 'com.udacity.gradle.builditbigger.paid'
+            targetSdkVersion 24
+            versionCode 1
+            versionName '1.0'
+            jackOptions {
+                enabled true
+            }
+        }
+        free {
+            minSdkVersion 15
+            applicationId 'com.udacity.gradle.builditbigger.com.udacity.gradle.builditbigger'
+            targetSdkVersion 23
+            versionCode 1
+            versionName '1.0'
+            jackOptions {
+                enabled true
+            }
+        }
+    }
+
+}
+
+task startBackend(dependsOn: ':backend:appengineRun') {
+
+    println 'starting back end'
+
+    project(":backend").afterEvaluate { backend ->
+        backend.extensions.appengine.daemon = true
+        }
+}
+startBackend.finalizedBy ":backend:appengineStop"
+
+
+task excuteTest(dependsOn: 'test') {
+    sleep(10* 1000)
+    println 'starting test case'
+}
+
+excuteTest.mustRunAfter startBackend
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    // Added for AdMob
+    compile project(path: ':jokelib')
+    compile project(':mylibrary')
+    compile project(path: ':backend', configuration: 'android-endpoints')
+    freeCompile 'com.google.firebase:firebase-ads:9.2.0'
+    testCompile 'junit:junit:4.12'
+    androidTestCompile 'junit:junit:4.12'
+    compile 'com.android.support:appcompat-v7:24.1.1'
+    compile 'com.google.android.gms:play-services-auth:9.2.0'
+    compile 'com.google.android.gms:play-services-gcm:9.2.0'
+    androidTestCompile 'com.android.support:support-annotations:24.1.1'
+    androidTestCompile 'com.android.support.test:runner:0.5'
+}
+if (android.productFlavors == "paid") {
+    apply plugin: 'com.google.gms.google-services'
+}
